@@ -6,10 +6,53 @@ Give **any AI that supports MCP** the ability to see images and convert them int
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-ready-8A2BE2)](https://modelcontextprotocol.io)
 
+---
+
+## CRITICAL — You MUST Provide the Image FILE PATH
+
+**This tool reads images from disk. It does NOT see images pasted into chat.**
+
 ```
-Screenshot → vision model sees it → code comes back → your AI works with it
-         (GPT-4o / Gemini / Claude)       (HTML, React, Vue, SVG...)
+WRONG:  "Convert this to HTML" [pastes screenshot into chat]
+RIGHT:  "Convert C:/Users/you/Desktop/screenshot.png to HTML"
 ```
+
+Your AI (Claude, DeepSeek, GPT text-only) cannot see pasted images. You must save the screenshot/photo to your computer first, then give the **full file path** to the tool. The vision model on the backend will read the file and generate the code.
+
+**This is the #1 mistake new users make. Remember: file path, not paste.**
+
+---
+
+## Why This Exists
+
+**Models like DeepSeek V4 Pro, GPT-4 (text), and many others have ZERO vision capability.** They literally cannot see images. When you paste a screenshot, they get nothing.
+
+This MCP server solves that problem:
+
+```
+You paste a screenshot path
+        │
+Your AI (no vision — DeepSeek, etc.)
+  → calls MCP tool: image_to_html_tailwind("C:/path/to/screenshot.png")
+        │
+MCP server reads the image file from disk
+  → sends it to GPT-4o / Gemini / Claude (vision model)
+        │
+Vision model sees the image → generates pixel-perfect code
+        │
+Code returns to your AI → it reads, understands, and responds
+        │
+You get complete working code with exact colors, text, layout
+```
+
+**Your AI never sees the image. The vision model does the "seeing." Your AI works with the generated code.**
+
+| Your AI model | Vision? | With this MCP |
+|---------------|---------|---------------|
+| DeepSeek V4 Pro | None | Full vision via Gemini/GPT-4o/Claude |
+| Claude Opus 4.7 (text mode) | None | Full vision via plugin |
+| GPT-4 (text) | None | Full vision via plugin |
+| Any MCP-capable AI | None | Full vision via plugin |
 
 ---
 
@@ -39,6 +82,31 @@ Then restart and you're done. Run /mcp to verify 9 tools appear.
 ```
 
 That's it. One prompt, 2 minutes.
+
+---
+
+## Update Your CLAUDE.md for Auto Tool Selection
+
+After installing, add this to your `CLAUDE.md` (or equivalent AI config) so the AI automatically uses the right tool:
+
+```markdown
+## Image Handling (image-to-code-mcp)
+
+I have NO vision. I cannot see pasted images. Always ask the user for the file path.
+
+When user provides an image FILE PATH (not pasted image):
+- "convert/make/build/code this" → use image_to_html_tailwind
+- "make this React" → use image_to_react
+- "make this Vue" → use image_to_vue
+- "make this Bootstrap" → use image_to_bootstrap
+- "make this Ionic" → use image_to_ionic
+- "plain HTML CSS" → use image_to_html_css
+- "convert to SVG" → use image_to_svg
+- "what is/describe/explain this image" → use ask_about_image or describe_image
+- Just a file path with no clear instruction → use ask_about_image first to understand the image, then suggest the best tool
+
+Remember: these tools need the ABSOLUTE FILE PATH. Copy-pasted images are invisible to me.
+```
 
 ---
 
@@ -107,20 +175,6 @@ Run `/mcp` — you should see `image-to-code-mcp` with 9 tools.
 
 ---
 
-## Usage
-
-Paste any screenshot and say:
-
-| What you say | Tool used |
-|-------------|-----------|
-| "Convert this to HTML/Tailwind" | `image_to_html_tailwind` |
-| "Make this a React component" | `image_to_react` |
-| "What data is in this chart?" | `ask_about_image` |
-| "Describe this photo" | `describe_image` |
-| "Turn this logo into SVG" | `image_to_svg` |
-
----
-
 ## All Tools
 
 | Tool | Output | Use for |
@@ -134,26 +188,6 @@ Paste any screenshot and say:
 | `image_to_svg` | SVG markup | Logos, icons, diagrams |
 | `describe_image` | Text description | Photos, documents |
 | `ask_about_image` | Conversational QA | Data extraction, questions |
-
----
-
-## How It Works
-
-```
-You: "Convert this dashboard screenshot to HTML"
-        │
-Your AI (no vision) → calls MCP tool image_to_html_tailwind("dash.png")
-        │
-MCP server → sends image to GPT-4o / Gemini / Claude (vision model)
-        │
-Vision model sees image → generates pixel-perfect HTML/CSS
-        │
-Code returns to your AI → it reads, understands, and responds
-        │
-You: Get complete working HTML file with exact colors, text, layout
-```
-
-Your AI never sees the image. The vision model does the "seeing." Your AI works with the generated code.
 
 ---
 
